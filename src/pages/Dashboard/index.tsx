@@ -1,4 +1,5 @@
-import React, {useState, FormEvent} from 'react';
+import React, {useState, useEffect , FormEvent} from 'react';
+import {Link} from 'react-router-dom';
 import {Title, Form, Repositories, Error} from './styles';
 import logoImg from '../../assets/logo.svg';
 import {FiChevronRight} from 'react-icons/fi';
@@ -16,13 +17,26 @@ interface Repository {
 const Dashboard: React.FC = () => {
     const [newRepo, setNewRepo] = useState('');
     const [inputError, setInputError] = useState('');
-    const [repositories, setRepositories] = useState<Repository[]>([]);
+    const [repositories, setRepositories] = useState<Repository[]>(() => {
+        const storageRepositories = localStorage.getItem('@GithubExplorer:repositories');
+
+        if(storageRepositories) {
+            return JSON.parse(storageRepositories);
+        }
+        else {
+            return [];
+        }
+    });
+
+    useEffect(() => {
+        localStorage.setItem('@GithubExplorer:repositories', JSON.stringify(repositories))
+    }, [repositories]);
 
     async function handleAddRepository(event: FormEvent<HTMLFormElement>): Promise<void> {
 
         event.preventDefault();
 
-        if(!inputError) {
+        if(!newRepo) {
             setInputError('Digite o nome do autor/repositório');
             return;
         }
@@ -59,7 +73,7 @@ const Dashboard: React.FC = () => {
             <Repositories>
                 {
                     repositories.map(repository => (
-                        <a key={repository.full_name} href="teste">
+                        <Link key={repository.full_name} to={`/repositories/${repository.full_name}`}>
                             <img
                                 src={repository.owner.avatar_url}
                                 alt={repository.owner.login}
@@ -70,7 +84,7 @@ const Dashboard: React.FC = () => {
                             </div>
 
                             <FiChevronRight size={20}/>
-                        </a>
+                        </Link>
                     ))
                 }
             </Repositories>
